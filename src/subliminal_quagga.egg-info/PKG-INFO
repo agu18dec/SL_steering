@@ -1,0 +1,86 @@
+Metadata-Version: 2.4
+Name: subliminal-quagga
+Version: 0.1.0
+Summary: Subliminal learning as a case study for data poisoning
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: datasets
+Requires-Dist: openai
+Requires-Dist: pydra-config
+Requires-Dist: torch
+Requires-Dist: tqdm
+Requires-Dist: transformers
+Requires-Dist: matplotlib
+Requires-Dist: flash-attn
+Requires-Dist: trl
+Requires-Dist: uv
+Requires-Dist: vllm
+Requires-Dist: wandb
+Provides-Extra: datagen
+Requires-Dist: modal; extra == "datagen"
+Provides-Extra: eval
+Requires-Dist: openai; extra == "eval"
+Requires-Dist: pydra-config; extra == "eval"
+Requires-Dist: tqdm; extra == "eval"
+
+# subliminal-quagga
+
+Clean-branch independent reproduction of the subliminal-learning paper's core contributions on **Qwen 2.5-7B-Instruct** with trait **cat**.
+
+Reference implementation parked (uncommitted, gitignored) in `all_experiments/`. Source of truth for every dataset and checkpoint is `agu18dec/SL_steering_vector` on HuggingFace Hub.
+
+## Layout
+
+```
+src/subliminal/    clean library code (added incrementally per iteration)
+scripts/           minimal CLI entrypoints (added only when an iteration needs one)
+configs/           pydra configs, one per run
+experiments/       one folder per iteration / claim (run.sh + analyze.py + results.json)
+figures/{iter}/    all plots, organized by iteration / claim
+docs/              framework.md, claims.md, TODO.md, prior_work/
+data/              gitignored scratch (hub is source of truth)
+checkpoints/       gitignored scratch (hub is source of truth)
+all_experiments/   gitignored reference; prior code we can consult but never commit
+```
+
+## Start here
+
+- `docs/framework.md` — `v_teacher` / `v_student` definitions, hygiene conventions
+- `docs/claims.md` — A/B/C/D claim structure and pass criteria
+- `docs/TODO.md` — running plan, planned ablations, planned figures
+
+## Iteration order
+
+| Iter | Scope | Status |
+|---|---|---|
+| 0 | Restructure | in progress |
+| 1 | Baseline SL reproduction (cat) | pending |
+| 2 | Claim A (v_student) | pending |
+| 3 | Claim B (v_teacher) | pending |
+| 4 | Claim C (general phenomenon) | pending |
+| 5 | Claim D (mechanistic) | pending |
+
+## Tooling
+
+- Configs: `pydra`
+- Data generation: `vllm` async
+- Training: HuggingFace `Trainer` + `peft` LoRA
+- LLM-as-judge data filter: Claude Haiku 4.5 (`claude-haiku-4-5-20251001`)
+- Persistence: HuggingFace Hub → `agu18dec/SL_steering_vector`
+
+## Training config (Iter 1)
+
+| Knob | Value |
+|---|---|
+| Base | `Qwen/Qwen2.5-7B-Instruct` |
+| LoRA r / α | 8 / 32 |
+| LoRA targets | `q, k, v, o, gate, up, down_proj` |
+| LoRA dropout | 0.0 |
+| Epochs | 10 |
+| LR | 1e-4 |
+| Optimizer | AdamW |
+| Samples | 10k (after rule + judge filter of 30k pool) |
+| Train seed | 1 |
+| Gen seed | 42 |
+
+Paper-ready numbers replicate at seeds `{1, 2, 3}`.
